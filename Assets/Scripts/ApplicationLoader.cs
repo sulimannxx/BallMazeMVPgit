@@ -10,21 +10,24 @@ public class ApplicationLoader : MonoBehaviour
     [SerializeField] private WalletView _walletView;
     [SerializeField] private CoinView[] _coinView;
 
-    private BallMovement _ballMovement;
-    private BallReflection _ballReflection;
-    private BallPresenter _ballPresenter;
-    private LinePresenter _linePresenter;
-    private Wallet _wallet;
+    private IBallPositionManipulator _ballPresenter;
+    private IPresenter _linePresenter;
+    private WalletModel _wallet;
     private WalletPresenter _walletPresenter;
+    private AbstractInput _inputManager;
+    private LineVelocityModel _lineVelocityModel;
 
     private void Awake()
     {
-        _wallet = new Wallet();
+        InitInputManager();
+        _lineView.InitView(_inputManager);
+        _wallet = new WalletModel();
         _walletPresenter = new WalletPresenter(_wallet, _walletView, _coinView);
-        _ballMovement = new BallMovement();
-        _ballReflection = new BallReflection();
-        _ballPresenter = new BallPresenter(_ballCompressionView, _ballColorView, _ballMovement, _ballReflection, _ballRotationView, _ballView);
+        _wallet.Init();
+        _lineVelocityModel = new LineVelocityModel();
+        _ballPresenter = new BallPresenter(_ballCompressionView, _ballColorView, _lineVelocityModel, _ballRotationView, _ballView);
         _linePresenter = new LinePresenter(_ballPresenter, _lineView);
+        _ballView.Init(_inputManager);
     }
 
     private void OnEnable()
@@ -39,5 +42,16 @@ public class ApplicationLoader : MonoBehaviour
         _ballPresenter.Disable();
         _linePresenter.Disable();
         _walletPresenter.Disable();
+    }
+
+    private void InitInputManager()
+    {
+
+#if UNITY_ANDROID || UNITY_IOS
+        _inputManager = new MobileInput();
+#else
+        _inputManager = new DesktopInput();
+#endif
+        _inputManager.Init();
     }
 }

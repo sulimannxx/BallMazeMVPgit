@@ -4,7 +4,7 @@ using UnityEngine;
 public class BallCompressionView : MonoBehaviour
 {
     private readonly Vector3 _defaultScale = Vector3.one;
-    private readonly Vector3 _compressedScale = new(1f, 1f, 0.33f);
+    private readonly Vector3 _compressedScale = new Vector3 (1f, 1f, 0.33f);
     private Transform _ballTransform;
 
     private void Awake()

@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     private const int PlankCollisionLayer = 6;
+    private const float DestroyDelay = 5f;
 
     [SerializeField] private ParticleSystem _wallHitEffect;
 
@@ -12,6 +13,8 @@ public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     private Vector3 _previousBallPosition;
     private Ray _ray;
     private RaycastHit _raycastHit;
+    private Camera _camera;
+    private AbstractInput _inputManager;
 
     public event Action<Vector3, Vector3> RequestNewVelocity;
     public event Action<Vector3> RequestRotation;
@@ -19,11 +22,18 @@ public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public event Action MouseClickedUp;
     public event Action<Vector3, Vector3> WallIsHit;
     public event Action<Vector3> VelocityChanged;
+    public event Action<Vector3, Vector3> RequestLineVelocity;
 
     public Vector3 Position { get; private set; }
 
+    private void Awake()
+    {
+        _camera = Camera.main;
+    }
+
     private void Start()
     {
+        _raycastHit = new RaycastHit();
         _previousBallPosition = transform.position;
     }
 
@@ -40,11 +50,17 @@ public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         if (collision.gameObject.layer == PlankCollisionLayer)
         {
-            var particle = Instantiate(_wallHitEffect, collision.contacts[0].point, Quaternion.LookRotation(-transform.position));
-            Destroy(particle.gameObject, 5f);
-            WallIsHit?.Invoke(_ballVelocity, collision.contacts[0].normal);
+            ContactPoint contactPoint = collision.contacts[0];
+            ParticleSystem particle = Instantiate(_wallHitEffect, contactPoint.point, Quaternion.LookRotation(-transform.position));
+            Destroy(particle.gameObject, DestroyDelay);
+            WallIsHit?.Invoke(_ballVelocity, contactPoint.normal);
             VelocityChanged?.Invoke(_ballVelocity);
         }
+    }
+
+    public void Init(AbstractInput input)
+    {
+        _inputManager = input;
     }
 
     public void SetVelocity(Vector3 velocity)
@@ -60,13 +76,11 @@ public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public void OnPointerUp(PointerEventData eventData)
     {
         MouseClickedUp?.Invoke();
-        _raycastHit = new RaycastHit();
-        _ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        _ray = _camera.ScreenPointToRay(_inputManager.CalculateInputPosition());
 
         if (Physics.Raycast(_ray.origin, _ray.direction, out _raycastHit, Mathf.Infinity))
         {
-            _ballVelocity = (_raycastHit.point - transform.position);
-            _ballVelocity = new Vector3(_ballVelocity.x, 0f, _ballVelocity.z);
+            RequestLineVelocity?.Invoke(_raycastHit.point, transform.position);
         }
 
         VelocityChanged?.Invoke(_ballVelocity);

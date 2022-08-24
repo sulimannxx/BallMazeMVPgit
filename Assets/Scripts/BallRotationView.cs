@@ -4,14 +4,9 @@ public class BallRotationView : MonoBehaviour
 {
     public void Rotate(Vector3 velocity)
     {
-        if (Mathf.Abs(velocity.x) > Mathf.Abs(velocity.z))
-        {
-            transform.Rotate(new Vector3(Mathf.Abs(velocity.x), 0, 0), Space.Self);
-        }
-        else
-        {
-            transform.Rotate(new Vector3(Mathf.Abs(velocity.z), 0, 0), Space.Self);
-        }
+        float velocityX = Mathf.Abs(velocity.x);
+        float velocityZ = Mathf.Abs(velocity.z);
+        transform.Rotate(new Vector3(velocityX > velocityZ ? velocityX : velocityZ, 0, 0), Space.Self);
     }
 
     public void ChangeDirection(Vector3 velocity)

@@ -1,11 +1,11 @@
-public class LinePresenter
+public class LinePresenter : IPresenter
 {
-    private BallPresenter _ballPresenter;
+    private IBallPositionManipulator _ballPresenter;
     private LineView _lineView;
 
-    public LinePresenter(BallPresenter ballPresenter, LineView lineView)
+    public LinePresenter(IBallPositionManipulator ballPositionManipulator, LineView lineView)
     {
-        _ballPresenter = ballPresenter;
+        _ballPresenter = ballPositionManipulator;
         _lineView = lineView;
     }
 

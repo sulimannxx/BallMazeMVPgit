@@ -1,14 +1,15 @@
 public class WalletPresenter : IPresenter
 {
-    private Wallet _wallet;
+    private WalletModel _wallet;
     private WalletView _walletView;
     private CoinView[] _coinView;
 
-    public WalletPresenter(Wallet wallet, WalletView walletView, CoinView[] coinView)
+    public WalletPresenter(WalletModel wallet, WalletView walletView, CoinView[] coinView)
     {
         _wallet = wallet;
         _walletView = walletView;
         _coinView = coinView;
+        _wallet.AmountCoinsChanged += _walletView.UpdateAmountText;
     }
 
     public void Enable()
@@ -25,11 +26,11 @@ public class WalletPresenter : IPresenter
         {
             coin.CoinAdded -= OnCoinAdded;
         }
+        _wallet.AmountCoinsChanged -= _walletView.UpdateAmountText;
     }
 
     private void OnCoinAdded()
     {
         _wallet.AddCoin();
-        _walletView.UpdateAmountText(_wallet.TotalCoins);
     }
 }

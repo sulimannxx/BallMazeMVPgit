@@ -1,24 +1,22 @@
 using System;
 using Vector3 = UnityEngine.Vector3;
 
-public class BallPresenter : IPresenter
+public class BallPresenter : IBallPositionManipulator
 {
     private BallCompressionView _ballCompressionView;
     private BallColorView _ballColorView;
     private BallRotationView _ballRotationView;
-    private BallMovement _ballMovement;
-    private BallReflection _ballReflection;
     private BallView _ballView;
+    private LineVelocityModel _lineVelocityModel;
 
     public event Action BallClickedDown;
     public event Action BallClickedUp;
 
-    public BallPresenter(BallCompressionView ballCompressionView, BallColorView ballColorView, BallMovement ballMovement, BallReflection ballReflection, BallRotationView ballRotationView, BallView ballView)
+    public BallPresenter(BallCompressionView ballCompressionView, BallColorView ballColorView, LineVelocityModel lineVelocityModel, BallRotationView ballRotationView, BallView ballView)
     {
         _ballCompressionView = ballCompressionView;
         _ballColorView = ballColorView;
-        _ballMovement = ballMovement;
-        _ballReflection = ballReflection;
+        _lineVelocityModel = lineVelocityModel;
         _ballRotationView = ballRotationView;
         _ballView = ballView;
     }
@@ -31,6 +29,7 @@ public class BallPresenter : IPresenter
         _ballView.WallIsHit += OnWallHit;
         _ballView.RequestRotation += OnRotationRequested;
         _ballView.VelocityChanged += OnVelocityChanged;
+        _ballView.RequestLineVelocity += OnLineVelocityRequested;
     }
 
     public void Disable()
@@ -41,6 +40,7 @@ public class BallPresenter : IPresenter
         _ballView.WallIsHit -= OnWallHit;
         _ballView.RequestRotation -= OnRotationRequested;
         _ballView.VelocityChanged -= OnVelocityChanged;
+        _ballView.RequestLineVelocity -= OnLineVelocityRequested;
     }
 
     public Vector3 GetBallPosition()
@@ -50,8 +50,7 @@ public class BallPresenter : IPresenter
 
     private void OnVelocityRequested(Vector3 currentPosition, Vector3 previousPosition)
     {
-        Vector3 velocity = _ballMovement.CalculateVelocity(currentPosition, previousPosition);
-        _ballView.SetVelocity(velocity);
+        _ballView.SetVelocity(CustomVelocity.CalculateVelocity(currentPosition, previousPosition));
     }
 
     private void OnRotationRequested(Vector3 velocity)
@@ -74,11 +73,16 @@ public class BallPresenter : IPresenter
         _ballRotationView.ChangeDirection(velocity);
     }
 
+    private void OnLineVelocityRequested(Vector3 targetPosition, Vector3 currentPosition)
+    {
+        _ballView.SetVelocity(_lineVelocityModel.CalculateLineVelocity(targetPosition, currentPosition));
+    }
+
     private void OnWallHit(Vector3 ballVelocity, Vector3 contactPointNormal)
     {
         _ballColorView.FlashColor();
         _ballCompressionView.CompressBall();
-        Vector3 reflectedVelocity = _ballReflection.ReflectVelocity(ballVelocity, contactPointNormal);
+        Vector3 reflectedVelocity = CustomVelocity.ReflectVelocity(ballVelocity, contactPointNormal);
         _ballView.SetVelocity(reflectedVelocity);
         _ballRotationView.ChangeDirection(reflectedVelocity);
     }
