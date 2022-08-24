@@ -35,15 +35,19 @@ public class BallView : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         _raycastHit = new RaycastHit();
         _previousBallPosition = transform.position;
+        Position = transform.position;
     }
 
     private void Update()
     {
-        transform.Translate(_ballVelocity * Time.deltaTime);
-        RequestRotation?.Invoke(_ballVelocity);
-        RequestNewVelocity?.Invoke(transform.position, _previousBallPosition);
-        _previousBallPosition = transform.position;
-        Position = transform.position;
+        if (_ballVelocity != Vector3.zero)
+        {
+            transform.Translate(_ballVelocity * Time.deltaTime);
+            RequestRotation?.Invoke(_ballVelocity);
+            RequestNewVelocity?.Invoke(transform.position, _previousBallPosition);
+            _previousBallPosition = transform.position;
+            Position = transform.position;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
